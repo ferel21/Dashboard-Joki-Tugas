@@ -3,8 +3,8 @@ import { Order } from '../types';
 
 interface OrderModalProps {
   onClose: () => void;
-  onAddOrder: (orderData: Omit<Order, 'id' | 'status'>) => void;
-  onUpdateOrder: (order: Order) => void;
+  onAddOrder: (orderData: Omit<Order, 'id' | 'status'>) => Promise<void>;
+  onUpdateOrder: (order: Order) => Promise<void>;
   orderToEdit: Order | null;
 }
 
@@ -44,7 +44,7 @@ const AddOrderModal: React.FC<OrderModalProps> = ({ onClose, onAddOrder, onUpdat
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const orderData = {
       customerName: formData.customerName,
@@ -55,12 +55,12 @@ const AddOrderModal: React.FC<OrderModalProps> = ({ onClose, onAddOrder, onUpdat
     };
 
     if (isEditMode && orderToEdit) {
-      onUpdateOrder({
+      await onUpdateOrder({
         ...orderToEdit,
         ...orderData,
       });
     } else {
-      onAddOrder(orderData);
+      await onAddOrder(orderData);
     }
   };
 
