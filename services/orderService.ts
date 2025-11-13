@@ -18,10 +18,21 @@ export const listenForOrders = (
   // Menggunakan sintaks v8 compat: collection.onSnapshot()
   return ordersCollection.onSnapshot(
     (snapshot) => {
-      const ordersData = snapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data(),
-      })) as Order[];
+      const ordersData = snapshot.docs.map(doc => {
+        const data = doc.data();
+        
+        // Firestore menyimpan tanggal sebagai objek Timestamp.
+        // Kita perlu mengonversinya kembali ke string YYYY-MM-DD.
+        if (data.deadline && typeof data.deadline.toDate === 'function') {
+            // toDate() -> JS Date object -> toISOString() -> "2024-07-28T..." -> split -> "2024-07-28"
+            data.deadline = data.deadline.toDate().toISOString().split('T')[0];
+        }
+
+        return {
+          id: doc.id,
+          ...data,
+        } as Order;
+      });
       callback(ordersData);
     },
     (error) => {
@@ -38,6 +49,7 @@ export const listenForOrders = (
 export const addOrder = (orderData: Omit<Order, 'id' | 'status'>) => {
   const newOrder = {
     ...orderData,
+    deadline: new Date(orderData.deadline), // Simpan sebagai objek tanggal agar Firestore mengenali
     status: OrderStatus.BARU_MASUK,
   };
   // Menggunakan sintaks v8 compat: collection.add()
@@ -50,9 +62,16 @@ export const addOrder = (orderData: Omit<Order, 'id' | 'status'>) => {
  * @param updates - An object containing the fields to update.
  */
 export const updateOrder = (orderId: string, updates: Partial<Order>) => {
+  // FIX: Type `finalUpdates` as `Record<string, any>` to allow `deadline` to be a Date object for Firestore.
+  const finalUpdates: Record<string, any> = { ...updates };
+  // Jika deadline diupdate, pastikan itu dikonversi ke objek Date
+  if (updates.deadline) {
+    finalUpdates.deadline = new Date(updates.deadline);
+  }
+
   // Menggunakan sintaks v8 compat: collection.doc(id).update()
   const orderRef = ordersCollection.doc(orderId);
-  return orderRef.update(updates);
+  return orderRef.update(finalUpdates);
 };
 
 /**

@@ -32,6 +32,15 @@ try {
       `;
   }
 }
-
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Izinkan semua orang untuk membaca dan menulis ke koleksi 'orders'
+    // PENTING: Ini hanya untuk pengembangan. Amankan ini sebelum produksi!
+    match /orders/{orderId} {
+      allow read, write: if true;
+    }
+  }
+}
 
 export { db };
