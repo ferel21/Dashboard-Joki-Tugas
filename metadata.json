@@ -1,0 +1,5 @@
+{
+  "name": "Dashboard Joki Tugas",
+  "description": "A dynamic dashboard to track and manage the sales process for homework helper services using a Kanban-style board.",
+  "requestFramePermissions": []
+}
